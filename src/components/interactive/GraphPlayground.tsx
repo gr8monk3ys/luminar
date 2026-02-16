@@ -2,7 +2,6 @@
 
 import { useRef, useEffect, useState, useCallback } from "react";
 import * as d3 from "d3";
-import { cn } from "@/lib/utils";
 
 interface GraphPlaygroundProps {
   equation: string;
@@ -41,6 +40,11 @@ function numericalDerivative(equation: string, x: number, h = 0.0001): number {
   return (evaluateEquation(equation, x + h) - evaluateEquation(equation, x - h)) / (2 * h);
 }
 
+function getCSSVar(name: string): string {
+  if (typeof window === "undefined") return "";
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
 export function GraphPlayground({
   equation,
   xRange = [-5, 5],
@@ -65,6 +69,11 @@ export function GraphPlayground({
   const drawGraph = useCallback(() => {
     if (!svgRef.current) return;
 
+    const gridColor = getCSSVar("--graph-grid") || "#e2e8f0";
+    const axisColor = getCSSVar("--graph-axis") || "#94a3b8";
+    const labelColor = getCSSVar("--graph-label") || "#64748b";
+    const hoverLabelColor = getCSSVar("--graph-hover-label") || "#334155";
+
     const svg = d3.select(svgRef.current);
     svg.selectAll("*").remove();
 
@@ -86,7 +95,7 @@ export function GraphPlayground({
         .attr("x2", (d) => xScale(d))
         .attr("y1", 0)
         .attr("y2", innerHeight)
-        .attr("stroke", "#e2e8f0")
+        .attr("stroke", gridColor)
         .attr("stroke-width", 0.5);
 
       g.selectAll(".grid-y")
@@ -98,7 +107,7 @@ export function GraphPlayground({
         .attr("x2", innerWidth)
         .attr("y1", (d) => yScale(d))
         .attr("y2", (d) => yScale(d))
-        .attr("stroke", "#e2e8f0")
+        .attr("stroke", gridColor)
         .attr("stroke-width", 0.5);
     }
 
@@ -110,13 +119,13 @@ export function GraphPlayground({
       g.append("line")
         .attr("x1", zeroX).attr("x2", zeroX)
         .attr("y1", 0).attr("y2", innerHeight)
-        .attr("stroke", "#94a3b8").attr("stroke-width", 1.5);
+        .attr("stroke", axisColor).attr("stroke-width", 1.5);
     }
     if (zeroY >= 0 && zeroY <= innerHeight) {
       g.append("line")
         .attr("x1", 0).attr("x2", innerWidth)
         .attr("y1", zeroY).attr("y2", zeroY)
-        .attr("stroke", "#94a3b8").attr("stroke-width", 1.5);
+        .attr("stroke", axisColor).attr("stroke-width", 1.5);
     }
 
     // Axis labels
@@ -124,14 +133,18 @@ export function GraphPlayground({
       .attr("transform", `translate(0,${innerHeight})`)
       .call(d3.axisBottom(xScale).ticks(10))
       .selectAll("text")
-      .attr("fill", "#64748b")
+      .attr("fill", labelColor)
       .style("font-size", "11px");
 
     g.append("g")
       .call(d3.axisLeft(yScale).ticks(10))
       .selectAll("text")
-      .attr("fill", "#64748b")
+      .attr("fill", labelColor)
       .style("font-size", "11px");
+
+    // Style axis domain lines and tick marks
+    g.selectAll(".domain").attr("stroke", axisColor);
+    g.selectAll(".tick line").attr("stroke", gridColor);
 
     // Function curve
     const numPoints = 500;
@@ -190,7 +203,7 @@ export function GraphPlayground({
     // Interactive hover + tangent
     if (interactive) {
       const hoverLine = g.append("line")
-        .attr("stroke", "#94a3b8")
+        .attr("stroke", axisColor)
         .attr("stroke-width", 1)
         .attr("stroke-dasharray", "4,4")
         .attr("opacity", 0);
@@ -203,7 +216,7 @@ export function GraphPlayground({
         .attr("opacity", 0);
 
       const hoverLabel = g.append("text")
-        .attr("fill", "#334155")
+        .attr("fill", hoverLabelColor)
         .attr("font-size", "12px")
         .attr("opacity", 0);
 
@@ -272,6 +285,18 @@ export function GraphPlayground({
 
   useEffect(() => {
     drawGraph();
+  }, [drawGraph]);
+
+  // Redraw when theme changes
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      drawGraph();
+    });
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+    return () => observer.disconnect();
   }, [drawGraph]);
 
   return (

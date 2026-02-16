@@ -2,9 +2,9 @@
 
 import { useState, useCallback } from "react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { cn } from "@/lib/utils";
-import { Play, RotateCcw, CheckCircle2, Eye, EyeOff } from "lucide-react";
+import { oneLight, oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { useTheme } from "@/components/ThemeProvider";
+import { RotateCcw, CheckCircle2, Eye, EyeOff } from "lucide-react";
 
 interface CodeEditorProps {
   language?: string;
@@ -21,6 +21,9 @@ export function CodeEditor({
 }: CodeEditorProps) {
   const [code, setCode] = useState(initialCode);
   const [showSolution, setShowSolution] = useState(false);
+  const { resolvedTheme } = useTheme();
+
+  const syntaxStyle = resolvedTheme === "dark" ? oneDark : oneLight;
 
   const handleReset = useCallback(() => {
     setCode(initialCode);
@@ -48,14 +51,14 @@ export function CodeEditor({
           <div className="flex items-center gap-2">
             <button
               onClick={handleReset}
-              className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-700 dark:hover:bg-slate-700"
+              className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-slate-200"
             >
               <RotateCcw className="h-3 w-3" /> Reset
             </button>
             {solution && (
               <button
                 onClick={() => setShowSolution(!showSolution)}
-                className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-700 dark:hover:bg-slate-700"
+                className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-slate-200"
               >
                 {showSolution ? (
                   <>
@@ -85,7 +88,7 @@ export function CodeEditor({
         />
         <SyntaxHighlighter
           language={language}
-          style={oneLight}
+          style={syntaxStyle}
           customStyle={{
             margin: 0,
             padding: "1rem",
@@ -107,7 +110,7 @@ export function CodeEditor({
           </div>
           <SyntaxHighlighter
             language={language}
-            style={oneLight}
+            style={syntaxStyle}
             customStyle={{
               margin: 0,
               padding: "1rem",

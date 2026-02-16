@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useCallback, useMemo, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import * as d3 from "d3";
-import { cn } from "@/lib/utils";
 
 interface SliderParam {
   name: string;
@@ -49,6 +48,11 @@ function evaluateWithParams(
   }
 }
 
+function getCSSVar(name: string): string {
+  if (typeof window === "undefined") return "";
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
 export function SliderExploration({
   title,
   description,
@@ -77,6 +81,10 @@ export function SliderExploration({
   useEffect(() => {
     if (!svgRef.current) return;
 
+    const gridColor = getCSSVar("--graph-grid") || "#e2e8f0";
+    const axisColor = getCSSVar("--graph-axis") || "#94a3b8";
+    const labelColor = getCSSVar("--graph-label") || "#64748b";
+
     const svg = d3.select(svgRef.current);
     svg.selectAll("*").remove();
 
@@ -96,7 +104,7 @@ export function SliderExploration({
       .attr("x2", (d) => xScale(d))
       .attr("y1", 0)
       .attr("y2", innerHeight)
-      .attr("stroke", "#e2e8f0")
+      .attr("stroke", gridColor)
       .attr("stroke-width", 0.5);
 
     g.selectAll(".grid-y")
@@ -107,15 +115,26 @@ export function SliderExploration({
       .attr("x2", innerWidth)
       .attr("y1", (d) => yScale(d))
       .attr("y2", (d) => yScale(d))
-      .attr("stroke", "#e2e8f0")
+      .attr("stroke", gridColor)
       .attr("stroke-width", 0.5);
 
     // Axes
     g.append("g")
       .attr("transform", `translate(0,${innerHeight})`)
-      .call(d3.axisBottom(xScale).ticks(10));
+      .call(d3.axisBottom(xScale).ticks(10))
+      .selectAll("text")
+      .attr("fill", labelColor)
+      .style("font-size", "11px");
 
-    g.append("g").call(d3.axisLeft(yScale).ticks(10));
+    g.append("g")
+      .call(d3.axisLeft(yScale).ticks(10))
+      .selectAll("text")
+      .attr("fill", labelColor)
+      .style("font-size", "11px");
+
+    // Style axis lines
+    g.selectAll(".domain").attr("stroke", axisColor);
+    g.selectAll(".tick line").attr("stroke", gridColor);
 
     // Curve
     const numPoints = 300;
@@ -143,6 +162,19 @@ export function SliderExploration({
       .attr("stroke-width", 2.5)
       .attr("d", line);
   }, [paramValues, equation, xRange, yRange, innerWidth, innerHeight, margin.left, margin.top]);
+
+  // Redraw when theme changes
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      // Trigger re-render by updating state with same values
+      setParamValues((prev) => ({ ...prev }));
+    });
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <div className="my-8 rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
@@ -186,7 +218,7 @@ export function SliderExploration({
                   [param.name]: parseFloat(e.target.value),
                 }))
               }
-              className="w-full accent-indigo-600"
+              className="w-full"
             />
             <div className="flex justify-between text-xs text-slate-400">
               <span>{param.min}</span>
