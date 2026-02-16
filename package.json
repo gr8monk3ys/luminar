@@ -1,0 +1,53 @@
+{
+  "name": "luminar-app",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate"
+  },
+  "dependencies": {
+    "@clerk/nextjs": "^6.37.4",
+    "@mdx-js/loader": "^3.1.1",
+    "@mdx-js/react": "^3.1.1",
+    "@neondatabase/serverless": "^1.0.2",
+    "@next/mdx": "^16.1.6",
+    "@sentry/nextjs": "^10.39.0",
+    "@types/d3": "^7.4.3",
+    "@types/katex": "^0.16.8",
+    "@types/react-syntax-highlighter": "^15.5.13",
+    "@upstash/redis": "^1.36.2",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "d3": "^7.9.0",
+    "drizzle-orm": "^0.45.1",
+    "gray-matter": "^4.0.3",
+    "katex": "^0.16.28",
+    "lucide-react": "^0.564.0",
+    "next": "16.1.6",
+    "next-mdx-remote": "^6.0.0",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-syntax-highlighter": "^16.1.0",
+    "rehype-katex": "^7.0.1",
+    "rehype-slug": "^6.0.0",
+    "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0",
+    "tailwind-merge": "^3.4.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "drizzle-kit": "^0.31.9",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.6",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
