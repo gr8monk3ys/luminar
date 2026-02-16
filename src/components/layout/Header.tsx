@@ -89,6 +89,13 @@ export function Header() {
               <Brain className="h-4 w-4" />
               Review
             </Link>
+            <Link
+              href="/daily-challenge"
+              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+            >
+              <Zap className="h-4 w-4" />
+              Daily
+            </Link>
             <SearchPalette />
           </nav>
 
@@ -204,6 +211,22 @@ export function Header() {
               >
                 <Brain className="h-5 w-5" />
                 Review
+              </Link>
+              <Link
+                href="/daily-challenge"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium text-slate-700 transition-colors hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+              >
+                <Zap className="h-5 w-5" />
+                Daily Challenge
+              </Link>
+              <Link
+                href="/achievements"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium text-slate-700 transition-colors hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+              >
+                <Trophy className="h-5 w-5" />
+                Achievements
               </Link>
               <Link
                 href="/sign-in"

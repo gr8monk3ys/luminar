@@ -180,6 +180,17 @@ export const courses: Record<string, CourseMetadata> = {
             concepts: ["taylor-series", "maclaurin-series", "convergence"],
             xpReward: 40,
           },
+          {
+            id: "convergence-tests",
+            title: "Convergence Tests",
+            description:
+              "Master the ratio test, comparison test, integral test, and more to determine if a series converges.",
+            estimatedMinutes: 15,
+            difficulty: 4,
+            bloomLevel: "apply",
+            concepts: ["ratio-test", "comparison-test", "integral-test", "alternating-series"],
+            xpReward: 40,
+          },
         ],
       },
     ],
@@ -497,6 +508,28 @@ export const courses: Record<string, CourseMetadata> = {
             concepts: ["dynamic-programming", "memoization", "tabulation"],
             xpReward: 35,
           },
+          {
+            id: "dp-knapsack",
+            title: "The Knapsack Problem",
+            description:
+              "The classic DP optimization problem — maximize value within a weight constraint.",
+            estimatedMinutes: 15,
+            difficulty: 4,
+            bloomLevel: "apply",
+            concepts: ["knapsack", "dp-table", "optimization"],
+            xpReward: 40,
+          },
+          {
+            id: "dp-longest-common-subsequence",
+            title: "Longest Common Subsequence",
+            description:
+              "Find the longest shared subsequence between two strings using a 2D DP table.",
+            estimatedMinutes: 15,
+            difficulty: 4,
+            bloomLevel: "apply",
+            concepts: ["lcs", "2d-dp", "string-algorithms"],
+            xpReward: 40,
+          },
         ],
       },
     ],
@@ -589,6 +622,17 @@ export const courses: Record<string, CourseMetadata> = {
             difficulty: 3,
             bloomLevel: "understand",
             concepts: ["normal-distribution", "z-score", "standardization"],
+            xpReward: 30,
+          },
+          {
+            id: "binomial-distribution",
+            title: "The Binomial Distribution",
+            description:
+              "Bernoulli trials, the binomial PMF, and the connection to the normal distribution.",
+            estimatedMinutes: 12,
+            difficulty: 3,
+            bloomLevel: "apply",
+            concepts: ["binomial-distribution", "bernoulli-trials", "pmf"],
             xpReward: 30,
           },
         ],
@@ -703,6 +747,17 @@ export const courses: Record<string, CourseMetadata> = {
             concepts: ["heaps", "priority-queues", "heapify"],
             xpReward: 35,
           },
+          {
+            id: "balanced-trees",
+            title: "Balanced Trees (AVL Trees)",
+            description:
+              "Why balance matters, the AVL property, and rotations to maintain O(log n) height.",
+            estimatedMinutes: 15,
+            difficulty: 4,
+            bloomLevel: "apply",
+            concepts: ["avl-trees", "rotations", "balance-factor"],
+            xpReward: 40,
+          },
         ],
       },
       {
@@ -743,6 +798,386 @@ export const courses: Record<string, CourseMetadata> = {
             concepts: ["dynamic-programming", "memoization", "tabulation"],
             xpReward: 40,
           },
+          {
+            id: "shortest-path-algorithms",
+            title: "Shortest Path Algorithms",
+            description:
+              "Dijkstra's algorithm and Bellman-Ford for finding shortest paths in weighted graphs.",
+            estimatedMinutes: 15,
+            difficulty: 4,
+            bloomLevel: "apply",
+            concepts: ["dijkstra", "bellman-ford", "shortest-path", "weighted-graphs"],
+            xpReward: 40,
+          },
+        ],
+      },
+    ],
+  },
+  "classical-mechanics": {
+    id: "classical-mechanics",
+    title: "Physics: Classical Mechanics",
+    description:
+      "From motion to momentum — build physical intuition through Newton's laws, energy conservation, and interactive problem-solving.",
+    category: "science",
+    difficulty: 3,
+    estimatedHours: 18,
+    prerequisites: ["calculus-fundamentals"],
+    icon: "F",
+    color: "#ef4444",
+    chapters: [
+      {
+        id: "kinematics",
+        title: "Kinematics",
+        description: "Describing motion mathematically",
+        lessons: [
+          {
+            id: "motion-in-one-dimension",
+            title: "Motion in One Dimension",
+            description:
+              "Position, velocity, acceleration, and the kinematic equations for constant acceleration.",
+            estimatedMinutes: 12,
+            difficulty: 2,
+            bloomLevel: "understand",
+            concepts: ["displacement", "velocity", "acceleration", "kinematics"],
+            xpReward: 25,
+          },
+          {
+            id: "projectile-motion",
+            title: "Projectile Motion",
+            description:
+              "Analyze trajectories by decomposing motion into independent horizontal and vertical components.",
+            estimatedMinutes: 15,
+            difficulty: 3,
+            bloomLevel: "apply",
+            concepts: ["projectile-motion", "parabolic-trajectory", "range-equation"],
+            xpReward: 35,
+          },
+          {
+            id: "relative-motion",
+            title: "Relative Motion & Reference Frames",
+            description:
+              "Understand how motion looks different from different reference frames using Galilean velocity addition.",
+            estimatedMinutes: 12,
+            difficulty: 3,
+            bloomLevel: "analyze",
+            concepts: ["relative-motion", "reference-frames", "galilean-transformation"],
+            xpReward: 30,
+          },
+        ],
+      },
+      {
+        id: "forces-newtons-laws",
+        title: "Forces & Newton's Laws",
+        description: "The cause of motion and its mathematical description",
+        lessons: [
+          {
+            id: "newtons-laws",
+            title: "Newton's Laws of Motion",
+            description:
+              "The three laws that govern all classical motion — from inertia to action-reaction pairs.",
+            estimatedMinutes: 15,
+            difficulty: 3,
+            bloomLevel: "understand",
+            concepts: ["newtons-laws", "inertia", "force", "f-equals-ma"],
+            xpReward: 35,
+          },
+          {
+            id: "friction-and-forces",
+            title: "Friction and Normal Forces",
+            description:
+              "Static and kinetic friction, free body diagrams, and inclined plane analysis.",
+            estimatedMinutes: 15,
+            difficulty: 3,
+            bloomLevel: "apply",
+            concepts: ["friction", "normal-force", "free-body-diagram", "inclined-plane"],
+            xpReward: 35,
+          },
+          {
+            id: "circular-motion",
+            title: "Circular Motion",
+            description:
+              "Centripetal acceleration, centripetal force, and applications to banked curves and orbits.",
+            estimatedMinutes: 15,
+            difficulty: 4,
+            bloomLevel: "apply",
+            concepts: ["circular-motion", "centripetal-acceleration", "centripetal-force"],
+            xpReward: 40,
+          },
+        ],
+      },
+      {
+        id: "energy-momentum",
+        title: "Energy & Momentum",
+        description: "Conservation laws that simplify complex problems",
+        lessons: [
+          {
+            id: "work-and-energy",
+            title: "Work, Energy, and Conservation",
+            description:
+              "Work, kinetic energy, potential energy, and the conservation of mechanical energy.",
+            estimatedMinutes: 15,
+            difficulty: 3,
+            bloomLevel: "apply",
+            concepts: ["work", "kinetic-energy", "potential-energy", "conservation-of-energy"],
+            xpReward: 40,
+          },
+          {
+            id: "momentum-and-collisions",
+            title: "Momentum and Collisions",
+            description:
+              "Linear momentum, impulse, and conservation of momentum in elastic and inelastic collisions.",
+            estimatedMinutes: 15,
+            difficulty: 4,
+            bloomLevel: "analyze",
+            concepts: ["momentum", "impulse", "collisions", "conservation-of-momentum"],
+            xpReward: 40,
+          },
+        ],
+      },
+    ],
+  },
+  "discrete-mathematics": {
+    id: "discrete-mathematics",
+    title: "Discrete Mathematics",
+    description:
+      "Logic, proofs, counting, and graph theory — the mathematical backbone of computer science and formal reasoning.",
+    category: "math",
+    difficulty: 3,
+    estimatedHours: 16,
+    prerequisites: [],
+    icon: "∀",
+    color: "#0ea5e9",
+    chapters: [
+      {
+        id: "logic-proofs",
+        title: "Logic & Proofs",
+        description: "The language of mathematical reasoning",
+        lessons: [
+          {
+            id: "propositional-logic",
+            title: "Propositional Logic",
+            description:
+              "Propositions, logical connectives, truth tables, and logical equivalences.",
+            estimatedMinutes: 12,
+            difficulty: 2,
+            bloomLevel: "understand",
+            concepts: ["propositions", "connectives", "truth-tables", "equivalences"],
+            xpReward: 25,
+          },
+          {
+            id: "proof-techniques",
+            title: "Proof Techniques",
+            description:
+              "Direct proof, contrapositive, contradiction, and proof by cases.",
+            estimatedMinutes: 15,
+            difficulty: 3,
+            bloomLevel: "apply",
+            concepts: ["direct-proof", "contrapositive", "contradiction", "proof-by-cases"],
+            xpReward: 35,
+          },
+          {
+            id: "mathematical-induction",
+            title: "Mathematical Induction",
+            description:
+              "The domino principle — prove infinitely many statements with a base case and inductive step.",
+            estimatedMinutes: 15,
+            difficulty: 4,
+            bloomLevel: "apply",
+            concepts: ["induction", "base-case", "inductive-step", "strong-induction"],
+            xpReward: 40,
+          },
+        ],
+      },
+      {
+        id: "combinatorics",
+        title: "Combinatorics",
+        description: "The art and science of counting",
+        lessons: [
+          {
+            id: "counting-principles",
+            title: "Counting Principles",
+            description:
+              "Addition rule, multiplication rule, inclusion-exclusion, and complementary counting.",
+            estimatedMinutes: 12,
+            difficulty: 2,
+            bloomLevel: "apply",
+            concepts: ["sum-rule", "product-rule", "inclusion-exclusion"],
+            xpReward: 30,
+          },
+          {
+            id: "permutations-combinations",
+            title: "Permutations & Combinations",
+            description:
+              "When order matters and when it doesn't — P(n,r), C(n,r), and Pascal's triangle.",
+            estimatedMinutes: 15,
+            difficulty: 3,
+            bloomLevel: "apply",
+            concepts: ["permutations", "combinations", "binomial-coefficients"],
+            xpReward: 35,
+          },
+          {
+            id: "pigeonhole-principle",
+            title: "The Pigeonhole Principle",
+            description:
+              "A deceptively simple idea that proves surprisingly powerful results.",
+            estimatedMinutes: 12,
+            difficulty: 3,
+            bloomLevel: "analyze",
+            concepts: ["pigeonhole-principle", "existence-proofs"],
+            xpReward: 30,
+          },
+        ],
+      },
+      {
+        id: "graph-theory",
+        title: "Graph Theory",
+        description: "Structures that model relationships and connections",
+        lessons: [
+          {
+            id: "graph-theory-fundamentals",
+            title: "Graph Theory Fundamentals",
+            description:
+              "Vertices, edges, degree, Euler paths, and graph coloring — from Königsberg to the modern world.",
+            estimatedMinutes: 15,
+            difficulty: 3,
+            bloomLevel: "understand",
+            concepts: ["graph-theory", "euler-paths", "graph-coloring", "handshaking-lemma"],
+            xpReward: 35,
+          },
+          {
+            id: "trees-and-spanning",
+            title: "Trees and Spanning Trees",
+            description:
+              "Tree properties, minimum spanning trees, and Kruskal's algorithm.",
+            estimatedMinutes: 15,
+            difficulty: 3,
+            bloomLevel: "apply",
+            concepts: ["trees", "spanning-trees", "kruskals-algorithm"],
+            xpReward: 35,
+          },
+        ],
+      },
+    ],
+  },
+  "ml-foundations": {
+    id: "ml-foundations",
+    title: "Machine Learning Foundations",
+    description:
+      "From linear regression to neural networks — understand the math and intuition behind machine learning algorithms.",
+    category: "data-science",
+    difficulty: 4,
+    estimatedHours: 20,
+    prerequisites: ["linear-algebra-ml", "calculus-fundamentals"],
+    icon: "AI",
+    color: "#a855f7",
+    chapters: [
+      {
+        id: "ml-basics",
+        title: "Foundations",
+        description: "The core ideas behind learning from data",
+        lessons: [
+          {
+            id: "what-is-ml",
+            title: "What Is Machine Learning?",
+            description:
+              "Supervised, unsupervised, and reinforcement learning — the ML landscape and pipeline.",
+            estimatedMinutes: 10,
+            difficulty: 2,
+            bloomLevel: "understand",
+            concepts: ["supervised-learning", "unsupervised-learning", "ml-pipeline"],
+            xpReward: 25,
+          },
+          {
+            id: "linear-regression",
+            title: "Linear Regression",
+            description:
+              "Fit a line to data using the mean squared error cost function and normal equations.",
+            estimatedMinutes: 15,
+            difficulty: 3,
+            bloomLevel: "apply",
+            concepts: ["linear-regression", "cost-function", "mse", "normal-equations"],
+            xpReward: 35,
+          },
+          {
+            id: "gradient-descent",
+            title: "Gradient Descent",
+            description:
+              "The workhorse optimization algorithm — follow the slope downhill to minimize any cost function.",
+            estimatedMinutes: 15,
+            difficulty: 4,
+            bloomLevel: "apply",
+            concepts: ["gradient-descent", "learning-rate", "optimization"],
+            xpReward: 40,
+          },
+        ],
+      },
+      {
+        id: "classification",
+        title: "Classification",
+        description: "Predicting categories from features",
+        lessons: [
+          {
+            id: "logistic-regression",
+            title: "Logistic Regression",
+            description:
+              "The sigmoid function, decision boundaries, and cross-entropy loss for binary classification.",
+            estimatedMinutes: 15,
+            difficulty: 3,
+            bloomLevel: "apply",
+            concepts: ["logistic-regression", "sigmoid", "cross-entropy", "decision-boundary"],
+            xpReward: 35,
+          },
+          {
+            id: "decision-trees",
+            title: "Decision Trees",
+            description:
+              "Split data using information gain and Gini impurity to build interpretable classifiers.",
+            estimatedMinutes: 15,
+            difficulty: 3,
+            bloomLevel: "apply",
+            concepts: ["decision-trees", "entropy", "information-gain", "gini-impurity"],
+            xpReward: 35,
+          },
+          {
+            id: "knn-algorithm",
+            title: "K-Nearest Neighbors",
+            description:
+              "Classify by proximity — distance metrics, choosing k, and the curse of dimensionality.",
+            estimatedMinutes: 12,
+            difficulty: 3,
+            bloomLevel: "apply",
+            concepts: ["knn", "distance-metrics", "curse-of-dimensionality"],
+            xpReward: 30,
+          },
+        ],
+      },
+      {
+        id: "beyond-basics",
+        title: "Beyond Basics",
+        description: "Deeper concepts in machine learning",
+        lessons: [
+          {
+            id: "neural-networks-intuition",
+            title: "Neural Networks Intuition",
+            description:
+              "Perceptrons, multi-layer networks, activation functions, and the universal approximation theorem.",
+            estimatedMinutes: 15,
+            difficulty: 4,
+            bloomLevel: "understand",
+            concepts: ["neural-networks", "perceptron", "activation-functions", "forward-pass"],
+            xpReward: 40,
+          },
+          {
+            id: "bias-variance-tradeoff",
+            title: "The Bias-Variance Tradeoff",
+            description:
+              "Why models fail — underfitting, overfitting, regularization, and cross-validation.",
+            estimatedMinutes: 15,
+            difficulty: 4,
+            bloomLevel: "analyze",
+            concepts: ["bias-variance", "overfitting", "regularization", "cross-validation"],
+            xpReward: 40,
+          },
         ],
       },
     ],
@@ -754,28 +1189,37 @@ export const learningPaths: LearningPath[] = [
     id: "math-foundations",
     title: "Math Foundations",
     description:
-      "Build a strong mathematical foundation from calculus through linear algebra and probability — essential for any technical career.",
+      "Build a strong mathematical foundation from calculus through linear algebra, probability, and discrete math — essential for any technical career.",
     icon: "π",
     color: "#6366f1",
-    courseIds: ["calculus-fundamentals", "linear-algebra-ml", "probability-statistics"],
+    courseIds: ["calculus-fundamentals", "linear-algebra-ml", "probability-statistics", "discrete-mathematics"],
   },
   {
     id: "cs-fundamentals",
     title: "CS Fundamentals",
     description:
-      "Master the core algorithms and data structures that every developer needs to know.",
+      "Master the core algorithms, data structures, and discrete math that every developer needs to know.",
     icon: "λ",
     color: "#10b981",
-    courseIds: ["python-algorithms", "data-structures"],
+    courseIds: ["python-algorithms", "data-structures", "discrete-mathematics"],
   },
   {
     id: "data-science-path",
-    title: "Data Science Track",
+    title: "Data Science & ML Track",
     description:
-      "From linear algebra to statistics — everything you need for a career in data science and machine learning.",
+      "From linear algebra to statistics to machine learning — everything you need for a career in data science.",
     icon: "Σ",
     color: "#f59e0b",
-    courseIds: ["linear-algebra-ml", "probability-statistics"],
+    courseIds: ["linear-algebra-ml", "probability-statistics", "ml-foundations"],
+  },
+  {
+    id: "stem-complete",
+    title: "STEM Complete",
+    description:
+      "The full journey — math, physics, CS, and machine learning for a comprehensive STEM education.",
+    icon: "★",
+    color: "#ef4444",
+    courseIds: ["calculus-fundamentals", "linear-algebra-ml", "classical-mechanics", "python-algorithms", "ml-foundations"],
   },
 ];
 

@@ -77,3 +77,42 @@ export interface SliderExplorationProps {
   }[];
   equation: string;
 }
+
+export interface FillInTheBlankProps {
+  id: string;
+  question: string;
+  correctAnswer: string;
+  tolerance?: number;
+  inputType?: "text" | "number";
+  placeholder?: string;
+  hint?: string;
+  explanation?: string;
+  caseSensitive?: boolean;
+}
+
+export interface MatchingPair {
+  left: string;
+  right: string;
+}
+
+export interface MatchingExerciseProps {
+  id: string;
+  instruction: string;
+  pairs: MatchingPair[];
+  explanation?: string;
+}
+
+export interface SortingExerciseProps {
+  id: string;
+  instruction: string;
+  items: string[];
+  explanation?: string;
+}
+
+export interface TrueFalseProps {
+  id: string;
+  statement: string;
+  isTrue: boolean;
+  explanation: string;
+  hint?: string;
+}

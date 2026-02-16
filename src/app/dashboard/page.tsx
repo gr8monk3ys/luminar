@@ -13,6 +13,8 @@ import {
   Play,
   CheckCircle2,
   Target,
+  Trophy,
+  Star,
 } from "lucide-react";
 
 export default function DashboardPage() {
@@ -165,6 +167,44 @@ export default function DashboardPage() {
               </Link>
             </div>
           )}
+
+          {/* Quick Actions */}
+          <div className="mb-8 grid gap-4 sm:grid-cols-2">
+            <Link
+              href="/daily-challenge"
+              className="group flex items-center gap-4 rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 p-6 transition-all hover:shadow-md dark:border-amber-800 dark:from-amber-900/20 dark:to-orange-900/20"
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500 text-white">
+                <Star className="h-6 w-6" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-slate-900 dark:text-white">
+                  Daily Challenge
+                </h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                  Solve today&apos;s problem for bonus XP
+                </p>
+              </div>
+              <ArrowRight className="h-5 w-5 text-amber-400 transition-transform group-hover:translate-x-1" />
+            </Link>
+            <Link
+              href="/achievements"
+              className="group flex items-center gap-4 rounded-2xl border border-purple-200 bg-gradient-to-r from-purple-50 to-indigo-50 p-6 transition-all hover:shadow-md dark:border-purple-800 dark:from-purple-900/20 dark:to-indigo-900/20"
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-500 text-white">
+                <Trophy className="h-6 w-6" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-slate-900 dark:text-white">
+                  Achievements
+                </h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                  Track your badges and milestones
+                </p>
+              </div>
+              <ArrowRight className="h-5 w-5 text-purple-400 transition-transform group-hover:translate-x-1" />
+            </Link>
+          </div>
 
           {/* Enrolled courses */}
           {enrolledCourses.length > 0 ? (

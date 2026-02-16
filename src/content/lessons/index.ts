@@ -59,6 +59,44 @@ export const lessonComponents: Record<string, ComponentType> = {
   "graphs-intro": dynamic(() => import("./graphs-intro")),
   "graph-traversal": dynamic(() => import("./graph-traversal")),
   "dynamic-programming-intro": dynamic(() => import("./dynamic-programming-intro")),
+
+  // Physics: Classical Mechanics
+  "motion-in-one-dimension": dynamic(() => import("./motion-in-one-dimension")),
+  "projectile-motion": dynamic(() => import("./projectile-motion")),
+  "relative-motion": dynamic(() => import("./relative-motion")),
+  "newtons-laws": dynamic(() => import("./newtons-laws")),
+  "friction-and-forces": dynamic(() => import("./friction-and-forces")),
+  "circular-motion": dynamic(() => import("./circular-motion")),
+  "work-and-energy": dynamic(() => import("./work-and-energy")),
+  "momentum-and-collisions": dynamic(() => import("./momentum-and-collisions")),
+
+  // Discrete Mathematics
+  "propositional-logic": dynamic(() => import("./propositional-logic")),
+  "proof-techniques": dynamic(() => import("./proof-techniques")),
+  "mathematical-induction": dynamic(() => import("./mathematical-induction")),
+  "counting-principles": dynamic(() => import("./counting-principles")),
+  "permutations-combinations": dynamic(() => import("./permutations-combinations")),
+  "pigeonhole-principle": dynamic(() => import("./pigeonhole-principle")),
+  "graph-theory-fundamentals": dynamic(() => import("./graph-theory-fundamentals")),
+  "trees-and-spanning": dynamic(() => import("./trees-and-spanning")),
+
+  // Machine Learning Foundations
+  "what-is-ml": dynamic(() => import("./what-is-ml")),
+  "linear-regression": dynamic(() => import("./linear-regression")),
+  "gradient-descent": dynamic(() => import("./gradient-descent")),
+  "logistic-regression": dynamic(() => import("./logistic-regression")),
+  "decision-trees": dynamic(() => import("./decision-trees")),
+  "knn-algorithm": dynamic(() => import("./knn-algorithm")),
+  "neural-networks-intuition": dynamic(() => import("./neural-networks-intuition")),
+  "bias-variance-tradeoff": dynamic(() => import("./bias-variance-tradeoff")),
+
+  // Expansion lessons for existing courses
+  "convergence-tests": dynamic(() => import("./convergence-tests")),
+  "dp-knapsack": dynamic(() => import("./dp-knapsack")),
+  "dp-longest-common-subsequence": dynamic(() => import("./dp-longest-common-subsequence")),
+  "binomial-distribution": dynamic(() => import("./binomial-distribution")),
+  "balanced-trees": dynamic(() => import("./balanced-trees")),
+  "shortest-path-algorithms": dynamic(() => import("./shortest-path-algorithms")),
 };
 
 export function getLessonComponent(lessonId: string): ComponentType | null {

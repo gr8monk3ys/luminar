@@ -51,8 +51,8 @@ export default function HomePage() {
                 <span className="text-indigo-200">not watching</span>
               </h1>
               <p className="mx-auto mt-6 max-w-2xl text-lg text-indigo-100">
-                Master math, computer science, and data science through
-                interactive problem-solving. Every lesson is hands-on — no
+                Master math, physics, computer science, and machine learning through
+                interactive problem-solving. 100+ hands-on lessons — no
                 passive videos, just deep understanding.
               </p>
               <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
@@ -107,11 +107,11 @@ export default function HomePage() {
                   <Zap className="h-6 w-6 text-purple-600 dark:text-purple-400" />
                 </div>
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                  Bite-Sized Lessons
+                  Daily Challenges & Achievements
                 </h3>
                 <p className="mt-2 text-slate-600 dark:text-slate-400">
-                  Each lesson takes 5-15 minutes. Learn deeply in short sessions
-                  that fit into your daily routine.
+                  Earn XP, unlock badges, maintain streaks, and tackle daily
+                  challenges to sharpen your skills.
                 </p>
               </div>
             </div>
