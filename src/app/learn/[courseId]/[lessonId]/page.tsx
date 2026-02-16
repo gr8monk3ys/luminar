@@ -5,15 +5,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { getLesson, getNextLesson, getPreviousLesson } from "@/content/courses";
-import { getLessonComponent } from "@/content/lessons";
+import { LessonRenderer } from "@/content/lessons/LessonRenderer";
 import { useProgress } from "@/hooks/useProgress";
-import { cn } from "@/lib/utils";
 import {
   ArrowLeft,
   ArrowRight,
   CheckCircle2,
   Clock,
-  Zap,
   ChevronLeft,
   ChevronRight,
   Trophy,
@@ -29,7 +27,6 @@ export default function LessonPage({
   const {
     completeLesson,
     isLessonCompleted,
-    recordActivity,
   } = useProgress();
   const [showCompletion, setShowCompletion] = useState(false);
 
@@ -38,7 +35,6 @@ export default function LessonPage({
   }
 
   const { lesson, chapter, course } = lessonInfo;
-  const LessonContent = getLessonComponent(lessonId);
   const nextLesson = getNextLesson(courseId, lessonId);
   const prevLesson = getPreviousLesson(courseId, lessonId);
   const completed = isLessonCompleted(lessonId);
@@ -98,15 +94,7 @@ export default function LessonPage({
       <main className="flex-1">
         <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="prose prose-slate dark:prose-invert max-w-none">
-            {LessonContent ? (
-              <LessonContent />
-            ) : (
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-12 text-center dark:border-slate-700 dark:bg-slate-800">
-                <p className="text-slate-500">
-                  Lesson content is being prepared. Check back soon!
-                </p>
-              </div>
-            )}
+            <LessonRenderer lessonId={lessonId} />
           </div>
 
           {/* Complete button */}

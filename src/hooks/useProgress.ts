@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useSyncExternalStore, useCallback } from "react";
 import type { UserProgress, LessonProgress, StreakData } from "@/types/content";
 
 const STORAGE_KEY = "luminar_progress";
+const STORAGE_EVENT = `storage:${STORAGE_KEY}`;
 
 const XP_PER_LEVEL = [
   0, 100, 250, 500, 1000, 1750, 2750, 4000, 5500, 7500, 10000,
@@ -46,31 +47,58 @@ const DEFAULT_PROGRESS: UserProgress = {
   lastActivityDate: "",
 };
 
+function readProgress(): UserProgress {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      return JSON.parse(stored) as UserProgress;
+    }
+  } catch {
+    // Use defaults
+  }
+  return DEFAULT_PROGRESS;
+}
+
+function writeProgress(updated: UserProgress): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    window.dispatchEvent(new Event(STORAGE_EVENT));
+  } catch {
+    // Storage full or unavailable
+  }
+}
+
+function subscribeProgress(callback: () => void) {
+  const handler = (e: StorageEvent) => {
+    if (e.key === STORAGE_KEY) callback();
+  };
+  window.addEventListener("storage", handler);
+  window.addEventListener(STORAGE_EVENT, callback);
+  return () => {
+    window.removeEventListener("storage", handler);
+    window.removeEventListener(STORAGE_EVENT, callback);
+  };
+}
+
+function getSnapshot(): string {
+  try {
+    return localStorage.getItem(STORAGE_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+function getServerSnapshot(): string {
+  return "";
+}
+
 export function useProgress() {
-  const [progress, setProgress] = useState<UserProgress>(DEFAULT_PROGRESS);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const raw = useSyncExternalStore(subscribeProgress, getSnapshot, getServerSnapshot);
+  const isLoaded = typeof window !== "undefined";
 
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored) as UserProgress;
-        setProgress(parsed);
-      }
-    } catch {
-      // Use defaults
-    }
-    setIsLoaded(true);
-  }, []);
-
-  const saveProgress = useCallback((updated: UserProgress) => {
-    setProgress(updated);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    } catch {
-      // Storage full or unavailable
-    }
-  }, []);
+  const progress: UserProgress = raw
+    ? (JSON.parse(raw) as UserProgress)
+    : DEFAULT_PROGRESS;
 
   const updateStreak = useCallback(
     (current: UserProgress): StreakData => {
@@ -84,7 +112,6 @@ export function useProgress() {
       if (isConsecutiveDay(streak.lastActivityDate)) {
         streak.current += 1;
       } else if (streak.lastActivityDate && !isSameDay(streak.lastActivityDate)) {
-        // Missed a day - check for streak freeze
         const lastDate = new Date(streak.lastActivityDate);
         const todayDate = new Date(today);
         const diffDays = Math.floor(
@@ -110,7 +137,7 @@ export function useProgress() {
 
   const completeLesson = useCallback(
     (lessonId: string, score: number, xpReward: number) => {
-      const updated = { ...progress };
+      const current = readProgress();
       const lessonProgress: LessonProgress = {
         completed: true,
         completedAt: new Date().toISOString(),
@@ -119,38 +146,40 @@ export function useProgress() {
         answers: {},
       };
 
-      updated.lessonsCompleted = {
-        ...updated.lessonsCompleted,
-        [lessonId]: lessonProgress,
+      const updated: UserProgress = {
+        ...current,
+        lessonsCompleted: {
+          ...current.lessonsCompleted,
+          [lessonId]: lessonProgress,
+        },
+        xp: current.xp + xpReward,
+        level: getLevel(current.xp + xpReward),
+        lastActivityDate: getToday(),
       };
-      updated.xp += xpReward;
-      updated.level = getLevel(updated.xp);
       updated.streak = updateStreak(updated);
-      updated.lastActivityDate = getToday();
-
-      saveProgress(updated);
+      writeProgress(updated);
     },
-    [progress, saveProgress, updateStreak]
+    [updateStreak]
   );
 
   const recordActivity = useCallback(() => {
-    const updated = { ...progress };
+    const current = readProgress();
+    const updated: UserProgress = {
+      ...current,
+      lastActivityDate: getToday(),
+    };
     updated.streak = updateStreak(updated);
-    updated.lastActivityDate = getToday();
-    saveProgress(updated);
-  }, [progress, saveProgress, updateStreak]);
+    writeProgress(updated);
+  }, [updateStreak]);
 
-  const enrollCourse = useCallback(
-    (courseId: string) => {
-      if (progress.coursesEnrolled.includes(courseId)) return;
-      const updated = {
-        ...progress,
-        coursesEnrolled: [...progress.coursesEnrolled, courseId],
-      };
-      saveProgress(updated);
-    },
-    [progress, saveProgress]
-  );
+  const enrollCourse = useCallback((courseId: string) => {
+    const current = readProgress();
+    if (current.coursesEnrolled.includes(courseId)) return;
+    writeProgress({
+      ...current,
+      coursesEnrolled: [...current.coursesEnrolled, courseId],
+    });
+  }, []);
 
   const isLessonCompleted = useCallback(
     (lessonId: string): boolean => {

@@ -1,34 +1,58 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useSyncExternalStore, useCallback } from "react";
 
 export function useLocalStorage<T>(key: string, initialValue: T) {
-  const [storedValue, setStoredValue] = useState<T>(initialValue);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const subscribe = useCallback(
+    (callback: () => void) => {
+      const handler = (e: StorageEvent) => {
+        if (e.key === key) callback();
+      };
+      window.addEventListener("storage", handler);
+      window.addEventListener(`storage:${key}`, callback);
+      return () => {
+        window.removeEventListener("storage", handler);
+        window.removeEventListener(`storage:${key}`, callback);
+      };
+    },
+    [key]
+  );
 
-  useEffect(() => {
+  const getSnapshot = useCallback(() => {
     try {
       const item = localStorage.getItem(key);
-      if (item) {
-        setStoredValue(JSON.parse(item));
-      }
+      return item ?? null;
     } catch {
-      // Use initial value
+      return null;
     }
-    setIsLoaded(true);
   }, [key]);
+
+  const getServerSnapshot = useCallback(() => null, []);
+
+  const rawValue = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+
+  const storedValue: T = rawValue !== null
+    ? (JSON.parse(rawValue) as T)
+    : initialValue;
+
+  const isLoaded = rawValue !== null || typeof window !== "undefined";
 
   const setValue = useCallback(
     (value: T | ((val: T) => T)) => {
-      const valueToStore = value instanceof Function ? value(storedValue) : value;
-      setStoredValue(valueToStore);
       try {
+        const current = localStorage.getItem(key);
+        const currentParsed: T = current
+          ? (JSON.parse(current) as T)
+          : initialValue;
+        const valueToStore =
+          value instanceof Function ? value(currentParsed) : value;
         localStorage.setItem(key, JSON.stringify(valueToStore));
+        window.dispatchEvent(new Event(`storage:${key}`));
       } catch {
         // Storage unavailable
       }
     },
-    [key, storedValue]
+    [key, initialValue]
   );
 
   return [storedValue, setValue, isLoaded] as const;

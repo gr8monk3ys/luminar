@@ -4,7 +4,8 @@ import {
   createContext,
   useContext,
   useEffect,
-  useState,
+  useRef,
+  useSyncExternalStore,
   useCallback,
 } from "react";
 
@@ -33,49 +34,70 @@ function getSystemTheme(): "light" | "dark" {
     : "light";
 }
 
+function resolveTheme(t: Theme): "light" | "dark" {
+  return t === "system" ? getSystemTheme() : t;
+}
+
+// External store for theme to work with useSyncExternalStore
+let currentTheme: Theme = "system";
+const listeners = new Set<() => void>();
+
+function subscribeTheme(callback: () => void) {
+  listeners.add(callback);
+  return () => listeners.delete(callback);
+}
+
+function getThemeSnapshot(): Theme {
+  return currentTheme;
+}
+
+function getServerSnapshot(): Theme {
+  return "system";
+}
+
+function setThemeStore(t: Theme) {
+  currentTheme = t;
+  listeners.forEach((l) => l());
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("system");
-  const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("light");
-  const [mounted, setMounted] = useState(false);
+  const theme = useSyncExternalStore(subscribeTheme, getThemeSnapshot, getServerSnapshot);
+  const resolved = resolveTheme(theme);
+  const mountedRef = useRef(false);
 
-  const applyTheme = useCallback((t: Theme) => {
-    const resolved = t === "system" ? getSystemTheme() : t;
-    setResolvedTheme(resolved);
-    document.documentElement.classList.toggle("dark", resolved === "dark");
-  }, []);
-
-  const setTheme = useCallback(
-    (t: Theme) => {
-      setThemeState(t);
-      localStorage.setItem("luminar-theme", t);
-      applyTheme(t);
-    },
-    [applyTheme]
-  );
-
+  // On mount, read from localStorage and apply
   useEffect(() => {
     const saved = localStorage.getItem("luminar-theme") as Theme | null;
     const initial = saved || "system";
-    setThemeState(initial);
-    applyTheme(initial);
-    setMounted(true);
+    currentTheme = initial;
+    const r = resolveTheme(initial);
+    document.documentElement.classList.toggle("dark", r === "dark");
+    mountedRef.current = true;
+    // Notify subscribers
+    listeners.forEach((l) => l());
 
+    // Listen for system theme changes
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
     const handler = () => {
-      if ((localStorage.getItem("luminar-theme") || "system") === "system") {
-        applyTheme("system");
+      if (currentTheme === "system") {
+        const r = resolveTheme("system");
+        document.documentElement.classList.toggle("dark", r === "dark");
+        listeners.forEach((l) => l());
       }
     };
     mq.addEventListener("change", handler);
     return () => mq.removeEventListener("change", handler);
-  }, [applyTheme]);
+  }, []);
 
-  if (!mounted) {
-    return <>{children}</>;
-  }
+  const setTheme = useCallback((t: Theme) => {
+    setThemeStore(t);
+    localStorage.setItem("luminar-theme", t);
+    const r = resolveTheme(t);
+    document.documentElement.classList.toggle("dark", r === "dark");
+  }, []);
 
   return (
-    <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme }}>
+    <ThemeContext.Provider value={{ theme, resolvedTheme: resolved, setTheme }}>
       {children}
     </ThemeContext.Provider>
   );

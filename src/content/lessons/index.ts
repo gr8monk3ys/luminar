@@ -1,7 +1,7 @@
 import dynamic from "next/dynamic";
 import type { ComponentType } from "react";
 
-const lessonComponents: Record<string, ComponentType> = {
+export const lessonComponents: Record<string, ComponentType> = {
   // Calculus Fundamentals
   "what-is-a-limit": dynamic(() => import("./what-is-a-limit")),
   "computing-limits": dynamic(() => import("./computing-limits")),

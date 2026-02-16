@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { courses } from "@/content/courses";
 import { Search, BookOpen, GraduationCap, ArrowRight } from "lucide-react";
@@ -67,21 +67,36 @@ export function SearchPalette() {
       .slice(0, 8);
   }, [query, allItems]);
 
+  const openPalette = useCallback(() => {
+    setOpen(true);
+    setQuery("");
+    setSelectedIndex(0);
+  }, []);
+
+  const closePalette = useCallback(() => {
+    setOpen(false);
+  }, []);
+
   const navigate = useCallback(
     (href: string) => {
-      setOpen(false);
-      setQuery("");
+      closePalette();
       router.push(href);
     },
-    [router]
+    [router, closePalette]
   );
 
-  // Keyboard shortcut to open
+  // Keyboard shortcut to open/close
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
-        setOpen((prev) => !prev);
+        setOpen((prev) => {
+          if (!prev) {
+            setQuery("");
+            setSelectedIndex(0);
+          }
+          return !prev;
+        });
       }
       if (e.key === "Escape") {
         setOpen(false);
@@ -95,15 +110,8 @@ export function SearchPalette() {
   useEffect(() => {
     if (open) {
       setTimeout(() => inputRef.current?.focus(), 50);
-      setSelectedIndex(0);
-      setQuery("");
     }
   }, [open]);
-
-  // Reset selection when results change
-  useEffect(() => {
-    setSelectedIndex(0);
-  }, [results]);
 
   // Scroll selected into view
   useEffect(() => {
@@ -127,10 +135,15 @@ export function SearchPalette() {
     }
   };
 
+  const handleQueryChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setQuery(e.target.value);
+    setSelectedIndex(0);
+  }, []);
+
   if (!open) {
     return (
       <button
-        onClick={() => setOpen(true)}
+        onClick={openPalette}
         className="hidden items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-400 transition-colors hover:border-slate-300 hover:text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-slate-600 dark:hover:text-slate-300 md:flex"
       >
         <Search className="h-3.5 w-3.5" />
@@ -149,7 +162,7 @@ export function SearchPalette() {
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-        onClick={() => setOpen(false)}
+        onClick={closePalette}
       />
 
       {/* Dialog */}
@@ -162,13 +175,13 @@ export function SearchPalette() {
             type="text"
             placeholder="Search lessons and courses..."
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={handleQueryChange}
             onKeyDown={handleKeyDown}
             className="w-full bg-transparent py-4 text-base text-slate-900 outline-none placeholder:text-slate-400 dark:text-white"
           />
           <kbd
-            className="shrink-0 rounded border border-slate-300 px-1.5 py-0.5 text-[10px] text-slate-400 dark:border-slate-600"
-            onClick={() => setOpen(false)}
+            className="shrink-0 cursor-pointer rounded border border-slate-300 px-1.5 py-0.5 text-[10px] text-slate-400 dark:border-slate-600"
+            onClick={closePalette}
           >
             ESC
           </kbd>

@@ -5,16 +5,13 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { courses, getAllLessonIds } from "@/content/courses";
 import { useProgress } from "@/hooks/useProgress";
-import { cn } from "@/lib/utils";
 import {
   Flame,
   Zap,
-  Trophy,
   BookOpen,
   ArrowRight,
   Play,
   CheckCircle2,
-  Calendar,
   Target,
 } from "lucide-react";
 
