@@ -17,6 +17,9 @@ import {
   Monitor,
   Menu,
   X,
+  Trophy,
+  Brain,
+  LogIn,
 } from "lucide-react";
 
 export function Header() {
@@ -71,6 +74,20 @@ export function Header() {
             >
               <BookOpen className="h-4 w-4" />
               Courses
+            </Link>
+            <Link
+              href="/leaderboard"
+              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+            >
+              <Trophy className="h-4 w-4" />
+              Leaderboard
+            </Link>
+            <Link
+              href="/review"
+              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+            >
+              <Brain className="h-4 w-4" />
+              Review
             </Link>
             <SearchPalette />
           </nav>
@@ -171,6 +188,30 @@ export function Header() {
               >
                 <BookOpen className="h-5 w-5" />
                 Courses
+              </Link>
+              <Link
+                href="/leaderboard"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium text-slate-700 transition-colors hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+              >
+                <Trophy className="h-5 w-5" />
+                Leaderboard
+              </Link>
+              <Link
+                href="/review"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium text-slate-700 transition-colors hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+              >
+                <Brain className="h-5 w-5" />
+                Review
+              </Link>
+              <Link
+                href="/sign-in"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium text-slate-700 transition-colors hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+              >
+                <LogIn className="h-5 w-5" />
+                Sign In
               </Link>
               <div className="border-t border-slate-200 pt-3 dark:border-slate-700">
                 <button
