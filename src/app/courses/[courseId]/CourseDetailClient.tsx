@@ -16,6 +16,7 @@ import {
   ArrowLeft,
   Zap,
   Play,
+  Award,
 } from "lucide-react";
 
 export default function CourseDetailClient({
@@ -81,16 +82,27 @@ export default function CourseDetailClient({
                     </div>
                   </div>
                 )}
-                {nextLessonId && (
-                  <Link
-                    href={`/learn/${courseId}/${nextLessonId}`}
-                    onClick={() => enrollCourse(courseId)}
-                    className="mt-6 inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-slate-900 shadow-lg transition-all hover:shadow-xl"
-                  >
-                    <Play className="h-4 w-4" />
-                    {progress.completed > 0 ? "Continue Learning" : "Start Course"}
-                  </Link>
-                )}
+                <div className="mt-6 flex flex-wrap items-center gap-3">
+                  {nextLessonId && (
+                    <Link
+                      href={`/learn/${courseId}/${nextLessonId}`}
+                      onClick={() => enrollCourse(courseId)}
+                      className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-slate-900 shadow-lg transition-all hover:shadow-xl"
+                    >
+                      <Play className="h-4 w-4" />
+                      {progress.completed > 0 ? "Continue Learning" : "Start Course"}
+                    </Link>
+                  )}
+                  {progress.percentage === 100 && (
+                    <Link
+                      href={`/certificate/${courseId}`}
+                      className="inline-flex items-center gap-2 rounded-full border-2 border-white/40 bg-white/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur-sm transition-all hover:border-white/60 hover:bg-white/20"
+                    >
+                      <Award className="h-4 w-4" />
+                      View Certificate
+                    </Link>
+                  )}
+                </div>
               </div>
             </div>
           </div>

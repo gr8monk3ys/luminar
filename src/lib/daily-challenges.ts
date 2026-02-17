@@ -642,17 +642,84 @@ const challengePool: DailyChallenge[] = [
   },
 ];
 
+// Simple seeded random for deterministic shuffling
+function seededRandom(seed: number): () => number {
+  let s = seed;
+  return () => {
+    s = (s * 1664525 + 1013904223) & 0xffffffff;
+    return (s >>> 0) / 0xffffffff;
+  };
+}
+
+function shuffleWithSeed<T>(array: T[], seed: number): T[] {
+  const shuffled = [...array];
+  const random = seededRandom(seed);
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
 /**
- * Deterministically selects today's challenge based on the current date.
- * Uses day-of-year modulo pool size for consistent daily selection.
+ * Deterministically selects a challenge for a given date.
+ * Uses a seeded shuffle based on year + cycle number so the order
+ * differs each time the pool is exhausted, avoiding repetitive sequences.
+ */
+export function getChallengeForDate(date: Date): DailyChallenge {
+  const year = date.getFullYear();
+  const startOfYear = new Date(year, 0, 0);
+  const diff = date.getTime() - startOfYear.getTime();
+  const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+  // Determine which cycle we're in and shuffle the pool for that cycle
+  const cycleNumber = Math.floor(dayOfYear / challengePool.length);
+  const dayInCycle = dayOfYear % challengePool.length;
+
+  // Use year + cycle number as seed for shuffling
+  const seed = year * 1000 + cycleNumber;
+  const shuffled = shuffleWithSeed(challengePool, seed);
+
+  return shuffled[dayInCycle];
+}
+
+/**
+ * Returns today's challenge using the seeded-shuffle algorithm.
  */
 export function getTodayChallenge(): DailyChallenge {
-  const now = new Date();
-  const startOfYear = new Date(now.getFullYear(), 0, 0);
-  const diff = now.getTime() - startOfYear.getTime();
-  const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
-  const index = dayOfYear % challengePool.length;
-  return challengePool[index];
+  return getChallengeForDate(new Date());
+}
+
+/**
+ * Calculates a streak of consecutive days with correct completions,
+ * counting backwards from today.
+ */
+export function getChallengeStreak(completions: { completedDate: string; correct: boolean }[]): number {
+  if (completions.length === 0) return 0;
+
+  const sorted = [...completions]
+    .filter(c => c.correct)
+    .sort((a, b) => b.completedDate.localeCompare(a.completedDate));
+
+  if (sorted.length === 0) return 0;
+
+  let streak = 0;
+  const today = new Date().toISOString().split("T")[0];
+  let expectedDate = today;
+
+  for (const completion of sorted) {
+    if (completion.completedDate === expectedDate) {
+      streak++;
+      // Go to previous day
+      const d = new Date(expectedDate);
+      d.setDate(d.getDate() - 1);
+      expectedDate = d.toISOString().split("T")[0];
+    } else if (completion.completedDate < expectedDate) {
+      break;
+    }
+  }
+
+  return streak;
 }
 
 /**

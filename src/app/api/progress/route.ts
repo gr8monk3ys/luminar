@@ -1,18 +1,36 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db, isDbConfigured } from "@/lib/db";
 import { users, lessonProgress, courseEnrollments } from "@/lib/db/schema";
 import { getAuthUserId } from "@/lib/auth";
 import { cached, invalidate } from "@/lib/redis";
+import { rateLimit } from "@/lib/rate-limit";
+import { getClientIp } from "@/lib/get-client-ip";
 import { eq } from "drizzle-orm";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const { success, remaining, reset } = await rateLimit(getClientIp(request), {
+    limit: 60,
+  });
+  if (!success) {
+    return NextResponse.json(
+      { error: "Too many requests" },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(Math.ceil(reset / 1000)),
+          "X-RateLimit-Remaining": String(remaining),
+        },
+      }
+    );
+  }
+
   const userId = await getAuthUserId();
   if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401, headers: { "X-RateLimit-Remaining": String(remaining) } });
   }
 
   if (!isDbConfigured()) {
-    return NextResponse.json({ error: "Database not configured" }, { status: 503 });
+    return NextResponse.json({ error: "Database not configured" }, { status: 503, headers: { "X-RateLimit-Remaining": String(remaining) } });
   }
 
   const data = await cached(`progress:${userId}`, async () => {
@@ -37,20 +55,38 @@ export async function GET() {
     };
   });
 
-  return NextResponse.json(data);
+  return NextResponse.json(data, {
+    headers: { "X-RateLimit-Remaining": String(remaining) },
+  });
 }
 
-export async function POST(req: Request) {
+export async function POST(request: NextRequest) {
+  const { success, remaining, reset } = await rateLimit(getClientIp(request), {
+    limit: 30,
+  });
+  if (!success) {
+    return NextResponse.json(
+      { error: "Too many requests" },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(Math.ceil(reset / 1000)),
+          "X-RateLimit-Remaining": String(remaining),
+        },
+      }
+    );
+  }
+
   const userId = await getAuthUserId();
   if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401, headers: { "X-RateLimit-Remaining": String(remaining) } });
   }
 
   if (!isDbConfigured()) {
-    return NextResponse.json({ error: "Database not configured" }, { status: 503 });
+    return NextResponse.json({ error: "Database not configured" }, { status: 503, headers: { "X-RateLimit-Remaining": String(remaining) } });
   }
 
-  const body = await req.json();
+  const body = await request.json();
   const { action } = body;
   const database = db()!;
 
@@ -58,7 +94,7 @@ export async function POST(req: Request) {
     // Sync localStorage progress to DB (initial migration)
     const { progress } = body;
     if (!progress) {
-      return NextResponse.json({ error: "Missing progress data" }, { status: 400 });
+      return NextResponse.json({ error: "Missing progress data" }, { status: 400, headers: { "X-RateLimit-Remaining": String(remaining) } });
     }
 
     // Upsert user
@@ -126,7 +162,9 @@ export async function POST(req: Request) {
     }
 
     await invalidate(`progress:${userId}`);
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true }, {
+      headers: { "X-RateLimit-Remaining": String(remaining) },
+    });
   }
 
   if (action === "complete-lesson") {
@@ -179,7 +217,9 @@ export async function POST(req: Request) {
 
     await invalidate(`progress:${userId}`);
     await invalidate("leaderboard:*");
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true }, {
+      headers: { "X-RateLimit-Remaining": String(remaining) },
+    });
   }
 
   if (action === "enroll") {
@@ -190,10 +230,12 @@ export async function POST(req: Request) {
       .onConflictDoNothing();
 
     await invalidate(`progress:${userId}`);
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true }, {
+      headers: { "X-RateLimit-Remaining": String(remaining) },
+    });
   }
 
-  return NextResponse.json({ error: "Unknown action" }, { status: 400 });
+  return NextResponse.json({ error: "Unknown action" }, { status: 400, headers: { "X-RateLimit-Remaining": String(remaining) } });
 }
 
 const XP_PER_LEVEL = [0, 100, 250, 500, 1000, 1750, 2750, 4000, 5500, 7500, 10000];

@@ -16,6 +16,7 @@ import {
   Trophy,
   Star,
 } from "lucide-react";
+import { ShareButton } from "@/components/ShareButton";
 
 export default function DashboardPage() {
   const {
@@ -97,7 +98,13 @@ export default function DashboardPage() {
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-100 dark:bg-indigo-900/30">
                   <Zap className="h-4 w-4 text-indigo-500" />
                 </div>
-                <span className="text-sm text-slate-500">Total XP</span>
+                <span className="flex-1 text-sm text-slate-500">Total XP</span>
+                <ShareButton
+                  title="My Luminar Progress"
+                  text={`I'm Level ${progress.level} on Luminar with ${progress.xp} XP! Learning STEM interactively.`}
+                  url="/dashboard"
+                  className="ml-auto"
+                />
               </div>
               <p className="text-3xl font-bold text-slate-900 dark:text-white">
                 {progress.xp}

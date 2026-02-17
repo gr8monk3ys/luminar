@@ -5,7 +5,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { InteractiveQuestion } from "@/components/interactive/InteractiveQuestion";
 import { useProgress } from "@/hooks/useProgress";
-import { getTodayChallenge } from "@/lib/daily-challenges";
+import { getTodayChallenge, type DailyChallenge } from "@/lib/daily-challenges";
 import {
   CalendarDays,
   Clock,
@@ -16,6 +16,7 @@ import {
   Trophy,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ShareButton } from "@/components/ShareButton";
 
 function getToday(): string {
   return new Date().toISOString().split("T")[0];
@@ -92,33 +93,81 @@ const categoryLabels: Record<string, { label: string; color: string; bg: string 
 
 export default function DailyChallengePage() {
   const { completeLesson, isLoaded } = useProgress();
+  const [challenge, setChallenge] = useState<DailyChallenge>(getTodayChallenge());
   const [completedToday, setCompletedToday] = useState(false);
   const [earnedXp, setEarnedXp] = useState(0);
   const [streak, setStreak] = useState(0);
   const [countdown, setCountdown] = useState(getTimeUntilMidnight());
   const [mounted, setMounted] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const challenge = getTodayChallenge();
   const today = getToday();
   const storageKey = getStorageKey(today);
 
-  // Check if already completed today
+  // Fetch challenge data from API (with fallback to local for unauthenticated users)
   useEffect(() => {
     setMounted(true);
-    try {
-      const stored = localStorage.getItem(storageKey);
-      if (stored) {
-        const data = JSON.parse(stored);
-        if (data.completed) {
-          setCompletedToday(true);
-          setEarnedXp(data.xpEarned || challenge.xpReward);
+
+    let cancelled = false;
+
+    async function fetchChallenge() {
+      try {
+        const res = await fetch("/api/daily-challenge");
+        if (res.ok) {
+          const data = await res.json();
+          if (cancelled) return;
+
+          // Update challenge from API
+          if (data.challenge) {
+            setChallenge(data.challenge);
+          }
+
+          // If the API returned completion status, use it (user is authenticated)
+          if (data.completedToday) {
+            setCompletedToday(true);
+            setEarnedXp(data.challenge?.xpReward || 0);
+            setIsAuthenticated(true);
+          }
+
+          if (typeof data.challengeStreak === "number" && data.challengeStreak > 0) {
+            setStreak(data.challengeStreak);
+            setIsAuthenticated(true);
+          }
+
+          // If the user is authenticated (streak or completion came back),
+          // mark that so we use the API for future operations
+          if (data.completedToday || data.challengeStreak > 0) {
+            setIsAuthenticated(true);
+          }
         }
+      } catch {
+        // API unavailable, fall back to local
       }
-    } catch {
-      // Ignore storage errors
+
+      if (cancelled) return;
+
+      // Also check localStorage as fallback
+      try {
+        const stored = localStorage.getItem(storageKey);
+        if (stored) {
+          const data = JSON.parse(stored);
+          if (data.completed) {
+            setCompletedToday(true);
+            setEarnedXp(data.xpEarned || challenge.xpReward);
+          }
+        }
+      } catch {
+        // Ignore storage errors
+      }
+
+      // Use localStorage streak as fallback if no API streak
+      setStreak((current) => (current > 0 ? current : getDailyChallengeStreak()));
     }
-    setStreak(getDailyChallengeStreak());
-  }, [storageKey, challenge.xpReward]);
+
+    fetchChallenge();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storageKey]);
 
   // Countdown timer
   useEffect(() => {
@@ -129,12 +178,12 @@ export default function DailyChallengePage() {
   }, []);
 
   const handleAnswer = useCallback(
-    (correct: boolean) => {
+    async (correct: boolean) => {
       if (!correct || completedToday) return;
 
       const xp = challenge.xpReward;
 
-      // Mark in localStorage
+      // Mark in localStorage (always, as fallback)
       try {
         localStorage.setItem(
           storageKey,
@@ -144,14 +193,49 @@ export default function DailyChallengePage() {
         // Ignore storage errors
       }
 
-      // Award XP through progress system
+      // Award XP through local progress system
       completeLesson(`daily-challenge-${today}`, 100, xp);
+
+      // POST the result to the API for server-side tracking
+      try {
+        const res = await fetch("/api/daily-challenge", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            challengeId: challenge.id,
+            correct: true,
+          }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.xpEarned) {
+            setEarnedXp(data.xpEarned);
+          }
+          setIsAuthenticated(true);
+        }
+      } catch {
+        // API unavailable, local progress was already saved
+      }
 
       setCompletedToday(true);
       setEarnedXp(xp);
+
+      // Refresh streak from API if authenticated, otherwise from localStorage
+      try {
+        const res = await fetch("/api/daily-challenge");
+        if (res.ok) {
+          const data = await res.json();
+          if (typeof data.challengeStreak === "number") {
+            setStreak(data.challengeStreak);
+            return;
+          }
+        }
+      } catch {
+        // Fall back to localStorage streak
+      }
       setStreak(getDailyChallengeStreak());
     },
-    [completedToday, challenge.xpReward, storageKey, today, completeLesson]
+    [completedToday, challenge.xpReward, challenge.id, storageKey, today, completeLesson]
   );
 
   const diffInfo = difficultyLabels[challenge.difficulty];
@@ -258,6 +342,20 @@ export default function DailyChallengePage() {
                       {streak}-day challenge streak!
                     </div>
                   )}
+
+                  <div className="mt-6 rounded-lg border border-indigo-200 bg-indigo-50 p-4 dark:border-indigo-800 dark:bg-indigo-900/20">
+                    <p className="text-sm font-medium text-indigo-700 dark:text-indigo-300">
+                      Come back tomorrow for a new challenge!
+                    </p>
+                  </div>
+
+                  <div className="mt-4">
+                    <ShareButton
+                      title="Luminar Daily Challenge"
+                      text={`I solved today's Daily Challenge on Luminar! \u{1F9E0} ${streak}-day streak!`}
+                      url="/daily-challenge"
+                    />
+                  </div>
 
                   {/* Still show the question for review */}
                   <div className="mt-8 text-left">

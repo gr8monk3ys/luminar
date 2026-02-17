@@ -88,6 +88,43 @@ export const reviewCards = pgTable(
   ]
 );
 
+export const userAchievements = pgTable(
+  "user_achievements",
+  {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    achievementId: text("achievement_id").notNull(),
+    earnedAt: timestamp("earned_at").notNull().defaultNow(),
+    xpAwarded: integer("xp_awarded").notNull().default(0),
+  },
+  (table) => [
+    uniqueIndex("user_achievement_unique").on(table.userId, table.achievementId),
+  ]
+);
+
+export const dailyChallengeCompletions = pgTable(
+  "daily_challenge_completions",
+  {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    challengeId: text("challenge_id").notNull(),
+    completedDate: text("completed_date").notNull(), // YYYY-MM-DD
+    correct: boolean("correct").notNull(),
+    xpEarned: integer("xp_earned").notNull().default(0),
+    completedAt: timestamp("completed_at").notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("daily_challenge_completion_unique").on(
+      table.userId,
+      table.completedDate
+    ),
+  ]
+);
+
 // Types inferred from schema
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -95,3 +132,6 @@ export type CourseEnrollment = typeof courseEnrollments.$inferSelect;
 export type LessonProgressRow = typeof lessonProgress.$inferSelect;
 export type ReviewCard = typeof reviewCards.$inferSelect;
 export type NewReviewCard = typeof reviewCards.$inferInsert;
+export type UserAchievement = typeof userAchievements.$inferSelect;
+export type NewUserAchievement = typeof userAchievements.$inferInsert;
+export type DailyChallengeCompletion = typeof dailyChallengeCompletions.$inferSelect;
