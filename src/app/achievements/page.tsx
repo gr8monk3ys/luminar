@@ -11,6 +11,7 @@ import {
   type Achievement,
 } from "@/lib/achievements";
 import { Trophy, Award } from "lucide-react";
+import { ShareButton } from "@/components/ShareButton";
 
 const categoryMeta: Record<
   Achievement["category"],
@@ -78,7 +79,7 @@ export default function AchievementsPage() {
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-amber-400 to-orange-500">
               <Trophy className="h-5 w-5 text-white" />
             </div>
-            <div>
+            <div className="flex-1">
               <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
                 Achievements
               </h1>
@@ -86,6 +87,13 @@ export default function AchievementsPage() {
                 {earnedCount} of {totalCount} earned
               </p>
             </div>
+            {earnedCount > 0 && (
+              <ShareButton
+                title="My Luminar Achievements"
+                text={`I've unlocked ${earnedCount} achievement${earnedCount !== 1 ? "s" : ""} on Luminar!`}
+                url="/achievements"
+              />
+            )}
           </div>
 
           {/* Progress summary */}

@@ -1,19 +1,37 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db, isDbConfigured } from "@/lib/db";
 import { reviewCards } from "@/lib/db/schema";
 import { getAuthUserId } from "@/lib/auth";
 import { sm2 } from "@/lib/spaced-repetition";
 import { lessonReviewCards } from "@/lib/spaced-repetition";
+import { rateLimit } from "@/lib/rate-limit";
+import { getClientIp } from "@/lib/get-client-ip";
 import { eq, and, lte } from "drizzle-orm";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const { success, remaining, reset } = await rateLimit(getClientIp(request), {
+    limit: 60,
+  });
+  if (!success) {
+    return NextResponse.json(
+      { error: "Too many requests" },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(Math.ceil(reset / 1000)),
+          "X-RateLimit-Remaining": String(remaining),
+        },
+      }
+    );
+  }
+
   const userId = await getAuthUserId();
   if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401, headers: { "X-RateLimit-Remaining": String(remaining) } });
   }
 
   if (!isDbConfigured()) {
-    return NextResponse.json({ error: "Database not configured" }, { status: 503 });
+    return NextResponse.json({ error: "Database not configured" }, { status: 503, headers: { "X-RateLimit-Remaining": String(remaining) } });
   }
 
   const database = db()!;
@@ -30,20 +48,38 @@ export async function GET() {
     )
     .limit(20);
 
-  return NextResponse.json({ cards: dueCards });
+  return NextResponse.json({ cards: dueCards }, {
+    headers: { "X-RateLimit-Remaining": String(remaining) },
+  });
 }
 
-export async function POST(req: Request) {
+export async function POST(request: NextRequest) {
+  const { success, remaining, reset } = await rateLimit(getClientIp(request), {
+    limit: 30,
+  });
+  if (!success) {
+    return NextResponse.json(
+      { error: "Too many requests" },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(Math.ceil(reset / 1000)),
+          "X-RateLimit-Remaining": String(remaining),
+        },
+      }
+    );
+  }
+
   const userId = await getAuthUserId();
   if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401, headers: { "X-RateLimit-Remaining": String(remaining) } });
   }
 
   if (!isDbConfigured()) {
-    return NextResponse.json({ error: "Database not configured" }, { status: 503 });
+    return NextResponse.json({ error: "Database not configured" }, { status: 503, headers: { "X-RateLimit-Remaining": String(remaining) } });
   }
 
-  const body = await req.json();
+  const body = await request.json();
   const { action } = body;
   const database = db()!;
 
@@ -53,7 +89,9 @@ export async function POST(req: Request) {
     const cards = lessonReviewCards[lessonId];
 
     if (!cards || cards.length === 0) {
-      return NextResponse.json({ generated: 0 });
+      return NextResponse.json({ generated: 0 }, {
+        headers: { "X-RateLimit-Remaining": String(remaining) },
+      });
     }
 
     let generated = 0;
@@ -75,7 +113,9 @@ export async function POST(req: Request) {
       }
     }
 
-    return NextResponse.json({ generated });
+    return NextResponse.json({ generated }, {
+      headers: { "X-RateLimit-Remaining": String(remaining) },
+    });
   }
 
   if (action === "review") {
@@ -90,7 +130,7 @@ export async function POST(req: Request) {
       );
 
     if (!card) {
-      return NextResponse.json({ error: "Card not found" }, { status: 404 });
+      return NextResponse.json({ error: "Card not found" }, { status: 404, headers: { "X-RateLimit-Remaining": String(remaining) } });
     }
 
     const result = sm2(
@@ -111,8 +151,10 @@ export async function POST(req: Request) {
       })
       .where(eq(reviewCards.id, cardId));
 
-    return NextResponse.json({ success: true, nextReview: result.nextReviewAt });
+    return NextResponse.json({ success: true, nextReview: result.nextReviewAt }, {
+      headers: { "X-RateLimit-Remaining": String(remaining) },
+    });
   }
 
-  return NextResponse.json({ error: "Unknown action" }, { status: 400 });
+  return NextResponse.json({ error: "Unknown action" }, { status: 400, headers: { "X-RateLimit-Remaining": String(remaining) } });
 }

@@ -16,6 +16,7 @@ import {
   Trophy,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ShareButton } from "@/components/ShareButton";
 
 function getToday(): string {
   return new Date().toISOString().split("T")[0];
@@ -258,6 +259,14 @@ export default function DailyChallengePage() {
                       {streak}-day challenge streak!
                     </div>
                   )}
+
+                  <div className="mt-4">
+                    <ShareButton
+                      title="Luminar Daily Challenge"
+                      text={`I solved today's Daily Challenge on Luminar! \u{1F9E0} ${streak}-day streak!`}
+                      url="/daily-challenge"
+                    />
+                  </div>
 
                   {/* Still show the question for review */}
                   <div className="mt-8 text-left">

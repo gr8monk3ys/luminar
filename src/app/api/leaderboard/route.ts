@@ -1,12 +1,30 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db, isDbConfigured } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { cached } from "@/lib/redis";
+import { rateLimit } from "@/lib/rate-limit";
+import { getClientIp } from "@/lib/get-client-ip";
 import { desc } from "drizzle-orm";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const { success, remaining, reset } = await rateLimit(getClientIp(request), {
+    limit: 60,
+  });
+  if (!success) {
+    return NextResponse.json(
+      { error: "Too many requests" },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(Math.ceil(reset / 1000)),
+          "X-RateLimit-Remaining": String(remaining),
+        },
+      }
+    );
+  }
+
   if (!isDbConfigured()) {
-    return NextResponse.json({ error: "Database not configured" }, { status: 503 });
+    return NextResponse.json({ error: "Database not configured" }, { status: 503, headers: { "X-RateLimit-Remaining": String(remaining) } });
   }
 
   const leaderboard = await cached(
@@ -30,5 +48,7 @@ export async function GET() {
     600 // 10 minute cache
   );
 
-  return NextResponse.json(leaderboard);
+  return NextResponse.json(leaderboard, {
+    headers: { "X-RateLimit-Remaining": String(remaining) },
+  });
 }

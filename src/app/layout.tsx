@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/components/AuthProvider";
+import { AnalyticsProvider } from "@/components/AnalyticsProvider";
 import "./globals.css";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://luminar.dev";
@@ -31,9 +32,6 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
-  icons: {
-    icon: "/favicon.ico",
-  },
 };
 
 export const viewport: Viewport = {
@@ -57,7 +55,9 @@ export default function RootLayout({
           Skip to content
         </a>
         <AuthProvider>
-          <ThemeProvider>{children}</ThemeProvider>
+          <ThemeProvider>
+            <AnalyticsProvider>{children}</AnalyticsProvider>
+          </ThemeProvider>
         </AuthProvider>
       </body>
     </html>
