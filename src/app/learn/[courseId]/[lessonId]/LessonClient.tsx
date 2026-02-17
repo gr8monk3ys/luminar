@@ -1,12 +1,13 @@
 "use client";
 
-import { use, useState, useCallback } from "react";
+import { use, useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Header } from "@/components/layout/Header";
-import { getLesson, getNextLesson, getPreviousLesson } from "@/content/courses";
+import { getLesson, getNextLesson, getPreviousLesson, courses } from "@/content/courses";
 import { LessonRenderer } from "@/content/lessons/LessonRenderer";
 import { useProgress } from "@/hooks/useProgress";
+import { useAchievements } from "@/hooks/useAchievements";
 import {
   ArrowLeft,
   ArrowRight,
@@ -15,7 +16,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Trophy,
+  Sparkles,
 } from "lucide-react";
+
+const isClerkConfigured = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
 export default function LessonClient({
   params,
@@ -25,9 +29,16 @@ export default function LessonClient({
   const { courseId, lessonId } = use(params);
   const lessonInfo = getLesson(courseId, lessonId);
   const {
+    progress,
     completeLesson,
     isLessonCompleted,
   } = useProgress();
+  const totalCourses = Object.keys(courses).length;
+  const {
+    newlyEarned,
+    syncAchievements,
+    clearNewlyEarned,
+  } = useAchievements(isClerkConfigured);
   const [showCompletion, setShowCompletion] = useState(false);
 
   if (!lessonInfo) {
@@ -44,8 +55,31 @@ export default function LessonClient({
       completeLesson(lessonId, 100, lesson.xpReward);
       setShowCompletion(true);
       setTimeout(() => setShowCompletion(false), 3000);
+
+      // Sync achievements after a short delay to allow localStorage to update
+      setTimeout(() => {
+        const STORAGE_KEY = "luminar_progress";
+        try {
+          const stored = localStorage.getItem(STORAGE_KEY);
+          if (stored) {
+            const updatedProgress = JSON.parse(stored);
+            syncAchievements(updatedProgress, totalCourses);
+          }
+        } catch {
+          // Fall back to current progress
+          syncAchievements(progress, totalCourses);
+        }
+      }, 100);
     }
-  }, [completed, completeLesson, lessonId, lesson.xpReward]);
+  }, [completed, completeLesson, lessonId, lesson.xpReward, syncAchievements, totalCourses, progress]);
+
+  // Auto-clear newly earned achievement toast after 5 seconds
+  useEffect(() => {
+    if (newlyEarned.length > 0) {
+      const timer = setTimeout(() => clearNewlyEarned(), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [newlyEarned, clearNewlyEarned]);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -86,6 +120,20 @@ export default function LessonClient({
           <div className="flex items-center gap-3 rounded-full bg-emerald-600 px-6 py-3 text-white shadow-lg">
             <Trophy className="h-5 w-5" />
             <span className="font-semibold">+{lesson.xpReward} XP earned!</span>
+          </div>
+        </div>
+      )}
+
+      {/* Achievement unlocked toast */}
+      {newlyEarned.length > 0 && (
+        <div className="fixed top-36 left-1/2 z-50 -translate-x-1/2">
+          <div className="flex items-center gap-3 rounded-full bg-amber-600 px-6 py-3 text-white shadow-lg animate-bounce">
+            <Sparkles className="h-5 w-5" />
+            <span className="font-semibold">
+              {newlyEarned.length === 1
+                ? `Achievement unlocked: ${newlyEarned[0].title}!`
+                : `${newlyEarned.length} new achievements unlocked!`}
+            </span>
           </div>
         </div>
       )}
