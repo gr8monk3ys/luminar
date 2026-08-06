@@ -17,6 +17,9 @@
 /.next/
 /out/
 
+# generated at build — see scripts/build-tutor-index.ts
+/src/content/tutor-index.generated.json
+
 # production
 /build
 
