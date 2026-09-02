@@ -278,15 +278,15 @@ export default function WhatIsML() {
       <p>
         At its core, supervised machine learning is an optimization problem. We
         define a <strong>loss function</strong> that measures how wrong our
-        model's predictions are, and then we minimize it:
+        model&apos;s predictions are, and then we minimize it:
       </p>
       <MathBlock
         latex="\hat{\theta} = \arg\min_\theta \frac{1}{n} \sum_{i=1}^{n} \mathcal{L}\big(f_\theta(\mathbf{x}_i),\; y_i\big)"
         display
       />
       <p>
-        Here &theta; represents the model's learnable parameters (weights and
-        biases), <em>f</em><sub>&theta;</sub> is the model's prediction
+        Here &theta; represents the model&apos;s learnable parameters (weights and
+        biases), <em>f</em><sub>&theta;</sub> is the model&apos;s prediction
         function, and <em>L</em> measures the discrepancy between predictions
         and true labels. This is where calculus becomes essential: we will use
         derivatives (gradients) to find the &theta; that minimizes the loss.

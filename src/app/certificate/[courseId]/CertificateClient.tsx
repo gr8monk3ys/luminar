@@ -32,6 +32,10 @@ export default function CertificateClient({
   useEffect(() => {
     try {
       const saved = localStorage.getItem(CERTIFICATE_NAME_KEY);
+      // Deliberately after mount, not in a lazy useState initializer: the
+      // server has no localStorage, so seeding the initial state from it would
+      // render a different tree on the server than on the client.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (saved) setRecipientName(saved);
     } catch {
       // localStorage unavailable

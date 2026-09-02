@@ -148,7 +148,7 @@ export default function LinearRegression() {
       />
       <p>
         This is the <strong>normal equation</strong>. Here <strong>X</strong> is
-        the design matrix (each row is a data point's features), and{" "}
+        the design matrix (each row is a data point&apos;s features), and{" "}
         <strong>y</strong> is the vector of labels. The expression{" "}
         <strong>X</strong><sup>T</sup><strong>X</strong> is a square matrix
         &mdash; its inverse exists as long as the features are linearly

@@ -2,7 +2,9 @@ import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // @gr8monk3ys/next-kit ships its ESM entry as TypeScript source, so Next has
+  // to compile it rather than treat it as a prebuilt dependency.
+  transpilePackages: ["@gr8monk3ys/next-kit"],
 };
 
 // Only wrap with Sentry if DSN is configured

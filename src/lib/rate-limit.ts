@@ -1,8 +1,30 @@
+/**
+ * Rate limiting.
+ *
+ * Thin app-specific layer over `@gr8monk3ys/next-kit/rate-limit`. This module
+ * owns the things that are luminar's: the `rateLimit(identifier, options)`
+ * signature the API routes call, the default limit/window, and the `reset`
+ * value expressed as *milliseconds remaining* (routes turn it straight into a
+ * `Retry-After` header). The window accounting and the store implementations
+ * live in the kit.
+ *
+ * Uses Upstash Redis when configured, and falls back to an in-process store
+ * when it is not — or when Redis is configured but unreachable.
+ */
+
+import {
+  createRateLimiter,
+  MemoryStore,
+  RedisStore,
+  type RateLimiter,
+  type RateLimitStore,
+} from "@gr8monk3ys/next-kit/rate-limit";
 import { redis } from "@/lib/redis";
 
 interface RateLimitResult {
   success: boolean;
   remaining: number;
+  /** Milliseconds until the current window resets. */
   reset: number;
 }
 
@@ -14,134 +36,86 @@ interface RateLimitOptions {
 const DEFAULT_LIMIT = 60;
 const DEFAULT_WINDOW_MS = 60_000; // 60 seconds
 
-// ---------------------------------------------------------------------------
-// In-memory fallback
-// ---------------------------------------------------------------------------
+/**
+ * In-process fallback. The kit's MemoryStore sweeps expired keys on access, so
+ * unlike the timer this replaces it cannot hold the Node process open.
+ */
+const memoryStore = new MemoryStore();
 
-interface MemoryEntry {
-  timestamps: number[];
+/**
+ * Module-level singleton Redis store.
+ *
+ * The Upstash REST client already satisfies the kit's `RedisLike` shape
+ * (`incr` / `pexpire` / `pttl` / `del`), so no adapter is needed.
+ *
+ * The prefix is versioned. The previous implementation wrote
+ * `rate-limit:<id>:<windowIndex>` — a counter per epoch-aligned window, with a
+ * new key name every window — while the kit writes one key per identifier and
+ * lets its TTL end the window. Both are plain strings under `INCR`, so there is
+ * no WRONGTYPE hazard, but `:v2:` keeps the two schemes from sharing a bucket
+ * while the old keys drain their TTLs.
+ */
+let redisStore: RateLimitStore | null | undefined;
+
+function getRedisStore(): RateLimitStore | null {
+  if (redisStore !== undefined) return redisStore;
+
+  const client = redis();
+  redisStore = client
+    ? new RedisStore(client, {
+        prefix: "rate-limit:v2:",
+        // Surface the failure to rateLimit() so it can fall back to the
+        // in-memory limiter, which still enforces the configured limit per
+        // instance, rather than failing open entirely.
+        onError: "closed",
+      })
+    : null;
+
+  return redisStore;
 }
 
-const memoryStore = new Map<string, MemoryEntry>();
+/**
+ * Limiter instances cached per (limit, window) so one is not built per request.
+ *
+ * No `prefix` is passed to `createRateLimiter`: keys stay the bare identifier,
+ * so a caller's requests count against a single bucket across every route, as
+ * they did before. Namespacing per route here would silently loosen the limits.
+ */
+const redisLimiters = new Map<string, RateLimiter>();
+const memoryLimiters = new Map<string, RateLimiter>();
 
-// Periodically clean up expired entries to prevent memory leaks.
-// Runs every 60 seconds.
-const CLEANUP_INTERVAL_MS = 60_000;
-let cleanupTimer: ReturnType<typeof setInterval> | null = null;
+function getLimiter(
+  cache: Map<string, RateLimiter>,
+  store: RateLimitStore,
+  limit: number,
+  windowMs: number
+): RateLimiter {
+  const cacheKey = `${limit}:${windowMs}`;
+  const cached = cache.get(cacheKey);
+  if (cached) return cached;
 
-function ensureCleanupTimer() {
-  if (cleanupTimer) return;
-  cleanupTimer = setInterval(() => {
-    const now = Date.now();
-    for (const [key, entry] of memoryStore) {
-      // Remove timestamps older than the largest possible window (we use the
-      // default window for cleanup; entries whose window has passed will
-      // naturally have all timestamps pruned on next access).
-      entry.timestamps = entry.timestamps.filter(
-        (t) => now - t < DEFAULT_WINDOW_MS * 2
-      );
-      if (entry.timestamps.length === 0) {
-        memoryStore.delete(key);
-      }
-    }
-    // If the store is empty, stop the timer so it doesn't keep the process alive.
-    if (memoryStore.size === 0 && cleanupTimer) {
-      clearInterval(cleanupTimer);
-      cleanupTimer = null;
-    }
-  }, CLEANUP_INTERVAL_MS);
-  // Allow the Node.js process to exit even if the timer is still running.
-  if (cleanupTimer && typeof cleanupTimer === "object" && "unref" in cleanupTimer) {
-    cleanupTimer.unref();
-  }
+  const limiter = createRateLimiter({ store, limit, windowMs });
+  cache.set(cacheKey, limiter);
+  return limiter;
 }
 
-async function rateLimitMemory(
+async function check(
+  cache: Map<string, RateLimiter>,
+  store: RateLimitStore,
   identifier: string,
   limit: number,
   windowMs: number
 ): Promise<RateLimitResult> {
-  ensureCleanupTimer();
-
-  const now = Date.now();
-  const windowStart = now - windowMs;
-
-  let entry = memoryStore.get(identifier);
-  if (!entry) {
-    entry = { timestamps: [] };
-    memoryStore.set(identifier, entry);
-  }
-
-  // Sliding window: keep only timestamps within the current window
-  entry.timestamps = entry.timestamps.filter((t) => t > windowStart);
-
-  if (entry.timestamps.length >= limit) {
-    // Rate limited — find when the oldest timestamp in the window expires
-    const oldestInWindow = entry.timestamps[0];
-    const resetMs = oldestInWindow + windowMs - now;
-    return {
-      success: false,
-      remaining: 0,
-      reset: resetMs,
-    };
-  }
-
-  entry.timestamps.push(now);
+  const result = await getLimiter(cache, store, limit, windowMs).check(
+    identifier
+  );
 
   return {
-    success: true,
-    remaining: limit - entry.timestamps.length,
-    reset: windowMs,
+    success: result.ok,
+    remaining: result.remaining,
+    reset: Math.max(0, result.resetAt - Date.now()),
   };
 }
-
-// ---------------------------------------------------------------------------
-// Redis-based sliding window using INCR + EXPIRE
-// ---------------------------------------------------------------------------
-
-async function rateLimitRedis(
-  identifier: string,
-  limit: number,
-  windowMs: number
-): Promise<RateLimitResult> {
-  const r = redis()!;
-  const windowSec = Math.ceil(windowMs / 1000);
-
-  // Use a key that rotates with each window. The window index is derived from
-  // the current time divided by the window size, giving us fixed windows that
-  // approximate a sliding window (simpler and very effective at scale).
-  const windowIndex = Math.floor(Date.now() / windowMs);
-  const key = `rate-limit:${identifier}:${windowIndex}`;
-
-  const count = await r.incr(key);
-
-  // Set expiry on the first request in this window
-  if (count === 1) {
-    await r.expire(key, windowSec);
-  }
-
-  const remaining = Math.max(0, limit - count);
-  // Time until the current window resets
-  const resetMs = windowMs - (Date.now() % windowMs);
-
-  if (count > limit) {
-    return {
-      success: false,
-      remaining: 0,
-      reset: resetMs,
-    };
-  }
-
-  return {
-    success: true,
-    remaining,
-    reset: resetMs,
-  };
-}
-
-// ---------------------------------------------------------------------------
-// Public API
-// ---------------------------------------------------------------------------
 
 /**
  * Rate-limit a request identified by `identifier`.
@@ -160,15 +134,15 @@ export async function rateLimit(
   const limit = options?.limit ?? DEFAULT_LIMIT;
   const windowMs = options?.windowMs ?? DEFAULT_WINDOW_MS;
 
-  const r = redis();
+  const store = getRedisStore();
 
-  if (r) {
+  if (store) {
     try {
-      return await rateLimitRedis(identifier, limit, windowMs);
+      return await check(redisLimiters, store, identifier, limit, windowMs);
     } catch {
       // Redis error — fall through to in-memory limiter so the API stays up
     }
   }
 
-  return rateLimitMemory(identifier, limit, windowMs);
+  return check(memoryLimiters, memoryStore, identifier, limit, windowMs);
 }
