@@ -55,9 +55,10 @@
     "eslint-config-next": "16.1.6",
     "jsdom": "^28.1.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.11"
   },
   "overrides": {
-    "esbuild": ">=0.25.0"
+    "esbuild": "^0.25.0"
   }
 }
