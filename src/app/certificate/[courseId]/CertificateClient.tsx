@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState, useEffect, useCallback } from "react";
+import { use, useState, useSyncExternalStore, useCallback } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCourse, getAllLessonIds } from "@/content/courses";
@@ -8,6 +8,33 @@ import { useProgress } from "@/hooks/useProgress";
 import { Award, Printer, Share2, ArrowLeft, BookOpen, Clock, BarChart3 } from "lucide-react";
 
 const CERTIFICATE_NAME_KEY = "certificate-name";
+const CERTIFICATE_NAME_EVENT = "luminar-certificate-name";
+
+// Same external-store pattern as useProgress: read localStorage through
+// useSyncExternalStore so hydration stays in sync without a setState-in-effect.
+function subscribeName(callback: () => void) {
+  const handler = (e: StorageEvent) => {
+    if (e.key === CERTIFICATE_NAME_KEY) callback();
+  };
+  window.addEventListener("storage", handler);
+  window.addEventListener(CERTIFICATE_NAME_EVENT, callback);
+  return () => {
+    window.removeEventListener("storage", handler);
+    window.removeEventListener(CERTIFICATE_NAME_EVENT, callback);
+  };
+}
+
+function getNameSnapshot(): string {
+  try {
+    return localStorage.getItem(CERTIFICATE_NAME_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+function getNameServerSnapshot(): string {
+  return "";
+}
 
 const difficultyLabels: Record<number, string> = {
   1: "Beginner",
@@ -26,22 +53,17 @@ export default function CertificateClient({
   const course = getCourse(courseId);
   const { getCourseProgress, getLessonProgress } = useProgress();
 
-  const [recipientName, setRecipientName] = useState("");
+  const recipientName = useSyncExternalStore(
+    subscribeName,
+    getNameSnapshot,
+    getNameServerSnapshot,
+  );
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(CERTIFICATE_NAME_KEY);
-      if (saved) setRecipientName(saved);
-    } catch {
-      // localStorage unavailable
-    }
-  }, []);
-
   const handleNameChange = useCallback((value: string) => {
-    setRecipientName(value);
     try {
       localStorage.setItem(CERTIFICATE_NAME_KEY, value);
+      window.dispatchEvent(new Event(CERTIFICATE_NAME_EVENT));
     } catch {
       // localStorage unavailable
     }
