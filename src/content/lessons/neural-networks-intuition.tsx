@@ -180,7 +180,7 @@ export default function NeuralNetworksIntuition() {
 
       <h2>The Forward Pass</h2>
       <p>
-        The <strong>forward pass</strong> computes the network's output by
+        The <strong>forward pass</strong> computes the network&apos;s output by
         propagating the input through each layer sequentially. It is a chain
         of composed functions:
       </p>
