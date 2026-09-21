@@ -1,0 +1,19 @@
+# Dependabot retune 2026-09-20: this repo is deployed (Vercel) and public, so
+# version updates stay on, monthly with a small PR cap. Security updates are a
+# repo setting (enabled 2026-09-20) and unaffected by this file.
+version: 2
+updates:
+- package-ecosystem: npm
+  directory: /
+  schedule:
+    interval: monthly
+  labels:
+  - automated
+  open-pull-requests-limit: 3
+- package-ecosystem: github-actions
+  directory: /
+  schedule:
+    interval: monthly
+  labels:
+  - automated
+  open-pull-requests-limit: 3
