@@ -2,6 +2,10 @@
 
 An interactive STEM learning platform inspired by Brilliant.org. Learn math, computer science, and data science through hands-on problem-solving — no passive videos, just deep understanding.
 
+## Preview
+
+![Luminar home page preview](docs/screenshots/home.png)
+
 ## Features
 
 - **Interactive Lessons**: Every lesson includes interactive components — graphs, code editors, quizzes, step-by-step solutions, and slider explorations
